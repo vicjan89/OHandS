@@ -1,126 +1,172 @@
-import csv
+import sqlite3
 
-class Rights:
-	def __init__(self):
-		self.rights = []
-		with open('Права.csv', 'r', encoding='UTF-8') as file:
-			reader = csv.reader(file)
-			for row in reader:
-				self.rights.append(row)
+import markdown
+from markdown.extensions.tables import TableExtension
 
-	def electro(self, right):
-		'''Если право по электробезопасности то возвращает True иначе False'''
-		for i in self.rights:
-			if i[0] == right:
-				if i[5] == '1':
-					return True
-				else:
-					return False
-		raise Exception('Нет такого права по электробезопасности!')
+try:
+    sqlite_connection = sqlite3.connect('workers.db')
+    cursor = sqlite_connection.cursor()
 
-	def spec(self, right):
-		'''Если право cgt то возвращает True иначе False'''
-		for i in self.rights:
-			if i[0] == right:
-				if i[6] == '1':
-					return True
-				else:
-					return False
-		raise Exception('Нет такого специального права!')
+    sqlite_select_query = "select * from documents;"
+    cursor.execute(sqlite_select_query)
+    record = cursor.fetchall()
+    cursor.close()
 
-person = []
-with open('Персонал.csv', 'r', encoding='UTF-8') as file:
-	reader = csv.reader(file)
-	for row in reader:
-		person.append(row)
-	person.sort(key=lambda prsn: prsn[1])
+except sqlite3.Error as error:
+    print("Ошибка при подключении к sqlite", error)
+finally:
+    if (sqlite_connection):
+        sqlite_connection.close()
+        print("Соединение с SQLite закрыто")
 
-select = []
-with open('Выбор.csv', 'r', encoding='UTF-8') as file:
-	reader = csv.reader(file)
-	for row in reader:
-		select.append(row)
+doc = {value[2]: value[1] for value in record}
+instrOt = '\n'.join(['1. '+value[1] for value in record if value[3] and not value[4]])
+instrOtIfWork = '\n'.join(['1. '+value[1] for value in record if value[3] and value[4]])
+instrOtDriver = '\n'.join(['1. ' + value[1] for value in record if value[5] and not value[4]])
+instrOtDriverIfWork = '\n'.join(['1. ' + value[1] for value in record if value[5] and value[4]])
+instrOtElectromonterLulka = '\n'.join(['|'+value[1]+'|' for value in record if value[3]])
+instrOtElectromonter = '\n'.join(['1. '+value[1]+'.' for value in record if value[3] and (value[2] != 'Для люльки')])
 
-rights_persons = []
-with open('Права работников.csv', 'r', encoding='UTF-8') as file:
-	reader = csv.reader(file)
-	for row in reader:
-		rights_persons.append(row)
+template = f'''<p style="margin-left: 60%;">УТВЕРЖДАЮ<br>
+первый заместитель директора - <br>
+главный инженер<br>
+С.О. Биндовский<br>
+«_____»__________2022г</p>
 
-rights = Rights()
+<p style="text-align: center;">Перечень технической документации мастера (старшего мастера) службы РЗАИ.</p>
 
-with open('Заявка на экзамен.csv', 'w', newline="", encoding='UTF-8') as file:
-	writer = csv.writer(file)
-	for i in select:
-		out = []
-		for p in person:
-			if i[0] == p[0]:
-				out.append(p[0])
-				out.append(p[1])
-				out.append(p[3])
-				out.append(p[4])
-				out.append(p[4])
-		ri = ''
-		ri_spec = ''
-		for r in rights_persons:
-			if r[0] == i[0]:
-				if rights.electro(r[1]):
-					ri += r[1] + ','
-				if rights.spec(r[1]):
-					ri_spec += r[1] + ','
-		out.insert(3, ri[:-1])
-		out.insert(4, ri_spec[:-1])
-		writer.writerow(out)
+**Журналы**
 
-with open('Персонал оформленный в СРЗАИ для СОТЭиОТ.csv', 'w', newline="", encoding='UTF-8') as file:
-	writer = csv.writer(file)
-	writer.writerow(['Информация по персоналу СРЗАИ, который оформляется в подразделении при проведении периодической проверки знаний в январе 2022 года.'])
-	for ni, i in enumerate(select):
-		out = []
-		out.append(ni+1)
-		for p in person:
-			if i[0] == p[0]:
-				out.append(p[0])
-				out.append(p[1])
-				out.append(p[5])
-		ri = ''
-		ri_spec = ''
-		for r in rights_persons:
-			if r[0] == i[0]:
-				if rights.electro(r[1]):
-					ri += r[1] + ','
-				if rights.spec(r[1]):
-					ri_spec += r[1] + ','
-		out.append(ri[:-1])
-		out.append(ri_spec[:-1])
-		out.append('прошёл')
-		out.append('прошёл')
-		writer.writerow(out)
+1. Журнал регистрации инструктажа по охране труда
+1. Журнал ежедневного контроля за соблюдением требований по охране труда
+1. Журнал учета и содержания средств защиты
+1. Журнал учёта нормированных заданий.     
+1. Журнал учёта выдачи нарядов-допусков и распоряжений
+1. Рабочий журнал  по РЗА. 
+1. Журнал учёта ремонтных работ
 
-with open('График проверки знаний.csv', 'w', newline="", encoding='UTF-8') as file:
-	writer = csv.writer(file)
-	for i, p in enumerate(person):
-		out = []
-		out.append(i+1)
-		out.append(p[0])
-		out.append(p[1])
-		out.append(p[3])
-		out.append(p[4])
-		out.append(p[4])
-		out.append(p[5])
-		out.append('')
-		out.append(p[5])
-		out.append('')
-		ri = ''
-		ri_spec = ''
-		for r in rights_persons:
-			if r[0] == p[0]:
-				if rights.electro(r[1]):
-					ri += r[1] + ','
-				if rights.spec(r[1]):
-					ri_spec += r[1] + ','
-		out.insert(4, ri[:-1])
-		out.insert(5, ri_spec[:-1])
-		writer.writerow(out)
+**НПА, ТНПА, ЛНПА**
+
+1. Таблица уставок РЗА по обслуживаемой зоне (допускается на электронном носителе) (За исключением мастера Семененкова И.А., мастера  Литвиновича Е.А. и лиц их замещающих)
+1. {doc['РЗА 110-750']}
+1. {doc['РЗА 0,4-35']}
+1. {doc['ТКП 427']}
+1. Программы проверки РЗА на выполняемую работу за исключением работ согласно «Перечня присоединений и устройств РЗА для работ на которых не требуется составление программ»
+1. Психологическая настройка перед работой
+1. Реестр рисков СРЗАИ
+1. {doc['Медицина']}
+1. {doc['Положение о талонах']}
+
+**Производственные инструкции**
+
+1. {doc['Видео']}
+1. {doc['Инструкция по радиостанции']}
+1. {doc['Схема радиосвязи']}
+1. {doc['Инструкция по тушению пожара']}
+
+**Инструкции по охране труда, которые должны быть на рабочем месте**
+
+{instrOt}
+
+**Инструкции по охране труда, которые должны быть на рабочем месте при выполнении соответствующих работ**
+
+{instrOtIfWork}
+
+**Перечни**
+
+1. Перечень технической документации мастера (старшего мастера) службы РЗАИ
+1. Перечень  защитных средств бригады СРЗАИ производящей работу без наличия бригадного автомобиля
+1. Перечень защитных средств бригадной автомашины СРЗАИ
+1. Перечень измерительных приборов и проверочных устройств
+1. Перечень комплектации медикаментами медицинских аптечек универсальных
+1. Перечень присоединений  и устройств РЗА для работ, на которых  не требуется составление программ
+1. Перечень работ, выполняемых в порядке текущей эксплуатации в филиале «Витебские электрические сети» РУП «Витебскэнерго»
+1. Перечень наиболее распространенных ошибок допускаемых работниками филиалов предприятия в период организации и проведения работ по нарядам-допускам на электротехническом оборудовании и их возможные причины.
+1. Перечень опасных зон, при производстве работ на которых требуется применение дополнительных мер безопасности
+
+**Схемы**
+
+1. Исполнительные схемы РЗА по ПС, ТП, РП, где производится работа.
+
+**Маршрутные карты**
+
+1. Маршрутные карты по Городокскому РЭС с базы Городокского РЭС
+1. Маршрутные карты по Витебскому сельскому РЭС с базы ВСРЭС
+1. Маршрутные карты по Витебскому городскому РЭС с базы ВГРЭС
+1. Маршрутные карты по Шумилинскому РЭС с базы Шумилинского РЭС
+1. Маршрутные карты по Лиозненскому РЭС с базы Лиозненского РЭС
+1. Маршрутные карты по Рубовскому РЭС с базы Рубовского РЭС
+1. Маршрутные карты по Бешенковичскому РЭС с базы Бешенковичского РЭС
+1. Маршрутные карты по ПС с базы ВЭС
+
+**Документация бригадного автомобиля**
+
+**Инструкции по охране труда, которые должны быть на рабочем месте**
+
+{instrOtDriver}
+
+**Инструкции по охране труда, которые должны быть на рабочем месте при выполнении соответствующих работ**
+
+{instrOtDriverIfWork}
+
+**Перечни**
+
+1. Перечень ремонтных работ, которые могут выполняться водителем на линии
+
+**Производственные инструкции, которые должны быть на рабочем месте при использовании данного оборудования)**
+
+1. {doc['Обогрев бригадного автомобиля']}
+1. {doc['Инфракрасный обогреватель']}
+1. {doc['Вебаста']}
+
+**Документация водителя, которая должна быть постоянно в автомобиле**
+
+1. Извещения о дорожно-транспортном происшествии; порядок заполнения бланка извещения о дорожно-транспортном происшествии; образец заполнения извещения о дорожно-транспортном происшествии. 
+1. Организационно-технологическая карта №6 МВ (технического обслуживания аккумуляторных батарей) от 12.03.2019
+1. Разрешение на эксплуатацию средства радиосвязи (выданное РУП «БелГИЭ»);
+1. Руководство по эксплуатации автомобиля.
+1. {doc['Видеорегистратор авто']}
 
 
+
+&emsp;&emsp;Начальник СРЗАИ&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;В.М.Януш
+
+Начальник СОТЭ и ОТ<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;Е.А.Рыбачонок<br>
+&emsp;&emsp;.&emsp;&emsp;2022<br>
+
+Начальник ПТО<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;А.Н. Катанович<br>
+&emsp;&emsp;.&emsp;&emsp;2022<br>
+'''
+template1 = f'''<font size = 4><p style="margin-left: 60%;">УТВЕРЖДАЮ<br>
+Первый заместитель директора - <br>
+главный инженер филиала "Витебские электрические сети" РУП "Витебскэнерго"<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;С.О. Биндовский<br>
+«&emsp;&emsp;»&emsp;&emsp;2022г</p>
+
+<p style="text-align: center;">Перечень инструкций по охране труда для электромонтёра по ремонту аппаратуры РЗАИ с правом работы в рабочей платформе мобильной подъёмной рабочей платформы.</p>
+
+| Наименование инструкции |
+|---|
+{instrOtElectromonterLulka}
+
+<br>
+<br>
+&emsp;&emsp;Начальник СРЗАИ&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;В.М.Януш
+<br>
+<br>
+Начальник СОТЭ и ОТ<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;Е.А.Рыбачонок<br>
+&emsp;&emsp;.&emsp;&emsp;2022<br></font>
+'''
+template2 = f'''
+| Наименование инструкции |
+|---|
+{instrOtElectromonterLulka}
+'''
+
+html = markdown.markdown(template1, extensions=['tables','attr_list'])
+
+with open('Перечень технической документации мастера.html', 'w') as file:
+	file.write(html)
