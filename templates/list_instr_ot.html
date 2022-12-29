@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p class="title">{{ name }}</p>
+<table border="1" cellpadding="2px" align="center">
+    <tr>
+        <td class="title">Наименование инструкции</td>
+    </tr>
+    {% for doc in data %}
+    <tr>
+        <td>{{ doc }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

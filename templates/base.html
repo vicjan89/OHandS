@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+ <head>
+     {% block head %}
+     <link rel="stylesheet" href="style.css" />
+     <title>{% block title %}{% endblock %} document</title>
+     {% endblock %}
+     <style>
+         .title {
+         text-align: center;
+         }
+         #header {
+         margin-left: 60%;
+         }
+         p {
+         font-size: 120%;
+         }
+         td {
+                  font-size: 120%;
+                  }
+         TABLE {
+            border-collapse: collapse; /* Убираем двойные линии между ячейками */
+        }
+     </style>
+ </head>
+ <body>
+    <div id="header">
+        {% block header %}
+            <p>УТВЕРЖДАЮ<br>
+первый заместитель директора - <br>
+главный инженер<br>
+С.О. Биндовский<br>
+«_____»__________2022г</p>
+        {% endblock %}
+    </div>
+    <div id="content">{% block content %}{% endblock %}</div>
+    <div id="footer">
+        {% block footer %}
+            <p>Начальник СРЗАИ&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;В.М.Януш<br>
+<br>
+Согласовано:<br>
+                Ведущий инженер по охране труда&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Квачонок Н.А.</p>
+        {% endblock %}
+    </div>
+</body>
+</html>
