@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+ <head>
+     <link rel="stylesheet" href="style.css" />
+     <title>document</title>
+     <style>
+         .title {
+         text-align: center;
+         font-size: 120%;
+         }
+         #header {
+         margin-left: 55%;
+         }
+         #content {
+         font-size: 120%;
+         }
+         p {
+         font-size: 120%;
+         }
+         td {
+                  font-size: 100%;
+                  }
+         TABLE {
+            border-collapse: collapse; /* Убираем двойные линии между ячейками */
+            font-size: 90%;
+        }
+     </style>
+ </head>
+ <body>
+    <div class="title">
+        Таблица прав по ОТ работников СРЗАИ.
+    </div>
+    <div id="content">
+        <table border="1" cellpadding="2px" align="center">
+    {% for i in data %}
+    <tr>
+        {% for r in i %}
+        <td>{% if r %}
+            {{ r }}
+            {% endif %}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

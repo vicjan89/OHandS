@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+ <head>
+     <link rel="stylesheet" href="style.css" />
+     <title>document</title>
+     <style>
+         .title {
+         text-align: center;
+         font-size: 120%;
+         }
+         #header {
+         margin-left: 55%;
+         }
+         #content {
+         font-size: 120%;
+         }
+         p {
+         font-size: 120%;
+         }
+         td {
+                  font-size: 100%;
+                  }
+         TABLE {
+            border-collapse: collapse; /* Убираем двойные линии между ячейками */
+            font-size: 90%;
+        }
+     </style>
+ </head>
+ <body>
+    <div class="title">
+        Список персонала на проверку знаний по СРЗАИ на __.__.2023.
+    </div>
+    <div id="content">
+        <table border="1" cellpadding="2px" align="center">
+    <tr>
+        <th rowspan="2">№п/п</th>
+        <th rowspan="2">Ф.И.О.</th>
+        <th rowspan="2">Должность</th>
+        <th rowspan="2">Группа по электро-безопасности</th>
+        <th rowspan="2">Права по электробезопасности</th>
+        <th rowspan="2">Права на выполнение специальных работ</th>
+        <th colspan="2">Дата предыдущей проверки знаний</th>
+        <th rowspan="2">Примечание</th>
+    </tr>
+    <tr>
+        <th>ОТ</th>
+        <th>ТЭ,ПБ</th>
+    </tr>
+    {% for doc in data %}
+    <tr>
+        <td>{{ data.index(doc)+1 }}</td>
+        <td>{{ doc[0] }}</td>
+        <td>{{ doc[1] }}</td>
+        <td>{{ doc[2] }}</td>
+        <td>{{ doc[4] }}. Права предоставить при работе на оборудовании {{ doc[5] }}</td>
+        <td>{{ doc[6] }}</td>
+        <td>{{ doc[3] }}</td>
+        <td>{{ doc[3] }}</td>
+        <td></td>
+    </tr>
+    {% endfor %}</table>
+    </div>
+    <div id="footer">
+            <br><p>Начальник СРЗАИ&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;В.М.Януш<br>
+    </div>
+</body>
+</html>

@@ -13,7 +13,41 @@ try:
     sqlite_select_query = "select * from documents;"
     cursor.execute(sqlite_select_query)
     record = cursor.fetchall()
+    cursor.execute('''SELECT names.name, Должность, names.'Группа по ЭБ', names.'Дата проверки знаний', 
+GROUP_CONCAT(CASE
+                WHEN rights.'По электробезопасности' THEN rights.right
+                END, ', ') as rights_sel1,
+GROUP_CONCAT(CASE
+                WHEN rights.'Зона' THEN rights.right
+                END, ', ') as rights_sel2,
+GROUP_CONCAT(CASE
+WHEN rights.'На выполнение специальных работ' THEN rights.right
+END, ', ') as rights_spec,
+names.'Номера билетов'
+FROM names 
+LEFT JOIN connections ON connections.name=names.nameID
+LEFT JOIN rights ON connections.right=rights.rightID
+WHERE names.nameID=34 OR names.nameID=32
+GROUP BY names.name
+''')
+    knowledge_check = cursor.fetchall()
+    cursor.execute('SELECT rights.right, rights.rightID FROM rights')
+    rights = cursor.fetchall()
+    cursor.execute('SELECT names.name, names.nameID FROM names')
+    names = cursor.fetchall()
+    cursor.execute('SELECT connections.name, connections.right FROM connections')
+    connections = cursor.fetchall()
     cursor.close()
+    rights_names = ['Ф.И.О']
+    rights_names.extend([(i[0]+'('+str(i[1])+')') for i in rights])
+    rights_rows = []
+    rights_rows.append(rights_names)
+    for n in names:
+        names_rows = []
+        names_rows.append(n[0]+'('+str(n[1])+')')
+        for r in rights:
+            names_rows.append(connections.count((n[1], r[1])))
+        rights_rows.append(names_rows)
 except sqlite3.Error as error:
     print("Ошибка при подключении к sqlite", error)
 finally:
@@ -64,12 +98,27 @@ menu = [['list_instr_ot.html',
          'Программа первичного инструктажа на рабочем месте для техника (по метрологии) СРЗАИ.',
          'Программа первичного инструктажа на рабочем месте для техника (по метрологии) СРЗАИ.html',
          doc],
+        ['Список персонала на проверку знаний.htm',
+         'Список персонала на проверку знаний.',
+         'Список персонала на проверку знаний.html',
+         knowledge_check],
+        ['Протокол проверки знаний.htm',
+         'Протоколы проверки знаний.',
+         'Протоколы проверки знаний.html',
+         knowledge_check],
+        ['Таблица прав.htm',
+         'Таблица прав.',
+         'Таблица прав.html',
+         rights_rows],
         ]
 prompt = [str(i)+' '+s[1] for i,s in enumerate(menu)]
 sel = int(input('\n'.join(prompt)+'\n>'))
-template = env.get_template(menu[sel][0])
-html = template.render(data=menu[sel][3],
-                       name=menu[sel][1])
+if 0 <= sel < len(menu):
+    template = env.get_template(menu[sel][0])
+    html = template.render(data=menu[sel][3],
+                           name=menu[sel][1])
 
-with open(p / menu[sel][2], 'w') as file:
-	file.write(html)
+    with open(p / menu[sel][2], 'w') as file:
+        file.write(html)
+else:
+    print('Выход')
