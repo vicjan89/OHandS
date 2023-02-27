@@ -16,28 +16,37 @@ try:
     cursor.execute('''SELECT names.name, Должность, names.'Группа по ЭБ', names.'Дата проверки знаний', 
 GROUP_CONCAT(CASE
                 WHEN rights.'По электробезопасности' THEN rights.right
-                END, ', ') as rights_sel1,
+                END, '; ') as rights_sel1,
 GROUP_CONCAT(CASE
                 WHEN rights.'Зона' THEN rights.right
-                END, ', ') as rights_sel2,
+                END, '; ') as rights_sel2,
 GROUP_CONCAT(CASE
 WHEN rights.'На выполнение специальных работ' THEN rights.right
-END, ', ') as rights_spec,
-names.'Номера билетов'
+END, '; ') as rights_spec,
+names.'Номера билетов',
+names.'Не сдал'
 FROM names 
 LEFT JOIN connections ON connections.name=names.nameID
 LEFT JOIN rights ON connections.right=rights.rightID
-WHERE names.nameID=34 OR names.nameID=32
+WHERE names.sel
 GROUP BY names.name
+ORDER BY Должность DESC
 ''')
     knowledge_check = cursor.fetchall()
+    cursor.execute('''SELECT names.name, Должность, names.'Дата проверки знаний', 
+    rights.right, names.'Номера билетов', names.'Не сдал'
+    FROM names 
+    LEFT JOIN connections ON connections.name=names.nameID
+    LEFT JOIN rights ON connections.right=rights.rightID
+    WHERE rights.rightID = 21
+    ''')
+    knowledge_check_lulka = cursor.fetchall()
     cursor.execute('SELECT rights.right, rights.rightID FROM rights')
     rights = cursor.fetchall()
     cursor.execute('SELECT names.name, names.nameID FROM names')
     names = cursor.fetchall()
     cursor.execute('SELECT connections.name, connections.right FROM connections')
     connections = cursor.fetchall()
-    cursor.close()
     rights_names = ['Ф.И.О']
     rights_names.extend([(i[0]+'('+str(i[1])+')') for i in rights])
     rights_rows = []
@@ -48,6 +57,13 @@ GROUP BY names.name
         for r in rights:
             names_rows.append(connections.count((n[1], r[1])))
         rights_rows.append(names_rows)
+    cursor.execute('SELECT names.name, names."Должность" FROM names')
+    items = cursor.fetchall()
+    cursor.close()
+    persons = {i[0].split(' ')[0]:i for i in items}
+    commission = {'chairman': persons['Януш'],
+                  'vice-chairman': persons['Тымуль'],
+                  'commission member': (persons['Беспалов'], persons['Чернов'])}
 except sqlite3.Error as error:
     print("Ошибка при подключении к sqlite", error)
 finally:
@@ -106,10 +122,22 @@ menu = [['list_instr_ot.html',
          'Протоколы проверки знаний.',
          'Протоколы проверки знаний.html',
          knowledge_check],
+        ['Протокол проверки знаний водителей.htm',
+         'Протоколы проверки знаний водителей.',
+         'Протоколы проверки знаний водителей.html',
+         knowledge_check],
+        ['Протокол проверки знаний на люльку.htm',
+         'Протоколы проверки знаний на люльку.',
+         'Протоколы проверки знаний на люльку.html',
+         knowledge_check_lulka],
         ['Таблица прав.htm',
          'Таблица прав.',
          'Таблица прав.html',
          rights_rows],
+        ['Список прошедших проверку знаний.htm',
+         'Список прошедших проверку знаний.',
+         'Список прошедших проверку знаний.html',
+         knowledge_check],
         ]
 prompt = [str(i)+' '+s[1] for i,s in enumerate(menu)]
 sel = int(input('\n'.join(prompt)+'\n>'))
